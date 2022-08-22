@@ -133,11 +133,17 @@ void Z_INTERNAL zng_inflate_fast(PREFIX3(stream) *strm, unsigned long start) {
     unsigned extra_safe;        /* copy chunks safely in all cases */
     uint32_t here32;            /* retrieved table entry as integer */
 
+#if BYTE_ORDER == LITTLE_ENDIAN
 #define TABLE_LOAD(table, index) do { \
         memcpy(&here32, &(table)[(index)], sizeof(code)); \
         memcpy(&here, &here32, sizeof(code)); \
     } while (0)
-
+#else
+#define TABLE_LOAD(table, index) do { \
+        memcpy(&here, &(table)[(index)], sizeof(code)); \
+        here32 = here.bits; \
+    } while (0)
+#endif
     /* copy state to local variables */
     state = (struct inflate_state *)strm->state;
     in = strm->next_in;
