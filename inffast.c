@@ -173,6 +173,16 @@ void Z_INTERNAL zng_inflate_fast(PREFIX3(stream) *strm, unsigned long start) {
     do {
         REFILL();
         here = lcode + (hold & lmask);
+        if (here->op == 0) {
+            *out++ = (unsigned char)(here->val);
+            DROPBITS(here->bits);
+            here = lcode + (hold & lmask);
+            if (here->op == 0) {
+                *out++ = (unsigned char)(here->val);
+                DROPBITS(here->bits);
+                here = lcode + (hold & lmask);
+            }
+        }
       dolen:
         DROPBITS(here->bits);
         op = here->op;
@@ -188,6 +198,9 @@ void Z_INTERNAL zng_inflate_fast(PREFIX3(stream) *strm, unsigned long start) {
             DROPBITS(op);
             Tracevv((stderr, "inflate:         length %u\n", len));
             here = dcode + (hold & dmask);
+            if (bits < 15 + 13) {
+                REFILL();
+            }
           dodist:
             DROPBITS(here->bits);
             op = here->op;
